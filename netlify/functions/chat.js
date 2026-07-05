@@ -1,5 +1,35 @@
 const https = require("https");
 
+function sendEmail(to, subject, body) {
+  return new Promise((resolve, reject) => {
+    const emailData = JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: "noreply@dedaloo.it", name: "Chatbot Dedaloo" },
+      subject: subject,
+      content: [{ type: "text/plain", value: body }]
+    });
+
+    const options = {
+      hostname: "api.sendgrid.com",
+      path: "/v3/mail/send",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.SENDGRID_API_KEY}`,
+        "Content-Length": Buffer.byteLength(emailData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      res.on("data", () => {});
+      res.on("end", () => resolve());
+    });
+    req.on("error", reject);
+    req.write(emailData);
+    req.end();
+  });
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -42,7 +72,7 @@ COSA NON DIRE MAI — ERRORI GRAVI DA EVITARE:
 - Durante la preparazione della pratica (7-8 mesi) i debiti continuano normalmente, il recupero crediti può ancora chiamare, i pignoramenti possono ancora partire.
 - Solo dal momento del deposito del piano in Tribunale in poi si blocca tutto.
 - Non promettere mai blocchi immediati — rimanda sempre al form e al consulente.
-- Non dire mai che la casa viene "salvata" con certezza — dipende dai presupposti specifici.
+- Non dire mai che la casa viene salvata con certezza — dipende dai presupposti specifici.
 
 QUALI DEBITI SI POSSONO CANCELLARE:
 Finanziamenti, cessioni del quinto, mutui, cartelle esattoriali, pignoramenti, fideiussioni, garanzie, debiti da impresa, debiti con parenti, debiti INPS, debiti con fornitori, cambiali.
@@ -85,10 +115,10 @@ PRIVATI:
 - Lettere Agenzia delle Entrate: non ignorarle — hai 60 giorni dalla notifica per agire. Esistono procedure specifiche per i debiti fiscali. Compila il form subito.
 - Non avere soldi per la procedura: l'analisi iniziale è gratuita. I costi con Dedaloo sono accessibili — valutiamo insieme.
 - Non arrivare a fine mese: è esattamente la situazione che queste procedure aiutano a risolvere nel tempo.
-- Pignoramento del conto: sono sempre impignorabili circa 1.500 euro. Se hanno bloccato anche quello, si può fare istanza al giudice.
 - Garante per qualcuno che non paga: anche il garante può accedere alle procedure di sovraindebitamento.
 
 PICCOLI IMPRENDITORI E PROFESSIONISTI:
+- Ho debiti con partita IVA: dipende dal tipo di debiti e dalla situazione — il Concordato Minore o la Liquidazione Controllata possono essere la soluzione. Compila il form per valutare.
 - Ho chiuso la partita IVA ma ho debiti fiscali: chiudere la P.IVA non cancella i debiti. La Liquidazione Controllata può azzerare tutto incluse le cartelle.
 - Debiti INPS: la Liquidazione Controllata stralcia anche i debiti previdenziali.
 - L'azienda non va avanti: il Concordato Minore permette di ripianificare, la Liquidazione Controllata permette di chiudere tutto e ripartire.
@@ -144,6 +174,30 @@ Rispondi sempre in italiano.`;
       req.write(requestBody);
       req.end();
     });
+
+    // Invia email con domanda e risposta a info@dedaloo.it
+    try {
+      const emailBody = `NUOVA DOMANDA CHATBOT DEDALOO
+
+Data: ${new Date().toLocaleString("it-IT")}
+
+DOMANDA UTENTE:
+${message}
+
+RISPOSTA CHATBOT:
+${reply}
+
+---
+Usa queste domande per migliorare il chatbot e creare contenuti SEO sul sito.`;
+
+      await sendEmail(
+        "info@dedaloo.it",
+        `Chatbot Dedaloo — ${message.substring(0, 60)}`,
+        emailBody
+      );
+    } catch(emailError) {
+      console.log("Email non inviata:", emailError.message);
+    }
 
     return {
       statusCode: 200,
