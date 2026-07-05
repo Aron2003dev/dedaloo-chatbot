@@ -3,19 +3,19 @@ const https = require("https");
 function sendEmail(to, subject, body) {
   return new Promise((resolve, reject) => {
     const emailData = JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: "noreply@dedaloo.it", name: "Chatbot Dedaloo" },
+      from: "noreply@dedaloo.it",
+      to: [to],
       subject: subject,
-      content: [{ type: "text/plain", value: body }]
+      text: body
     });
 
     const options = {
-      hostname: "api.sendgrid.com",
-      path: "/v3/mail/send",
+      hostname: "api.resend.com",
+      path: "/emails",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.SENDGRID_API_KEY}`,
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
         "Content-Length": Buffer.byteLength(emailData)
       }
     };
