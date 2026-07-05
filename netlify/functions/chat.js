@@ -1,4 +1,4 @@
-const https = require("https");
+ const https = require("https");
 
 function sendEmail(to, subject, body) {
   return new Promise((resolve, reject) => {
@@ -175,7 +175,7 @@ Rispondi sempre in italiano.`;
       req.end();
     });
 
-    // Invia email con domanda e risposta a info@dedaloo.it
+    // Invia email con domanda e risposta a curtiele@gmail.com
     try {
       const emailBody = `NUOVA DOMANDA CHATBOT DEDALOO
 
@@ -191,7 +191,7 @@ ${reply}
 Usa queste domande per migliorare il chatbot e creare contenuti SEO sul sito.`;
 
       await sendEmail(
-        "info@dedaloo.it",
+        "curtiele@gmail.com",
         `Chatbot Dedaloo — ${message.substring(0, 60)}`,
         emailBody
       );
